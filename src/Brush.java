@@ -11,7 +11,7 @@ public class Brush {
 
     class Bristle {
         int startX, startY, endX, endY;
-        int radius;
+        int radius, startRadius;
 
         Bristle(int x, int y, int r) {
             startX = x;
@@ -19,6 +19,35 @@ public class Brush {
             endX = x;
             endY = y;
             radius = r;
+            startRadius = r;
+        }
+
+        void update() {
+            if (endX == (x + startX) && endY == (y + startY)) {
+                radius += 1;
+            } else {
+                radius = startRadius;
+            }
+
+            endX = x + startX;
+            endY = y + startY;
+        }
+
+        void draw() {
+            int pixel = painting.get(endX, endY);
+            processing.stroke(pixel);
+
+            if (endX == (x + startX) && endY == (y + startY)) {
+                processing.strokeWeight(radius / 50);
+                processing.point(endX, endY);
+            } else {
+                float dist = PApplet.dist(x + startX, y + startY, endX, endY);
+
+                // The bigger the distance, i.e. the faster the mouse is moved,
+                // the bigger and more coarse the line width
+                processing.strokeWeight((radius * dist) / 50);
+                processing.line(x + startX, y + startY, endX, endY);
+            }
         }
     }
 
@@ -68,26 +97,12 @@ public class Brush {
         // Must run whether mouse is pressed or not
         // to keep bristle x/y positions up to date
         for (int i = 0; i < bristles.length; i++) {
-            int x1 = x + bristles[i].startX;
-            int y1 = y + bristles[i].startY;
-
             if (processing.mousePressed) {
-                float x2 = bristles[i].endX;
-                float y2 = bristles[i].endY;
-                float radius = bristles[i].radius;
-                float dist = PApplet.dist(x1, y1, x2, y2);
-                int pixel = painting.get((int) x2, (int) y2);
-                processing.stroke(pixel);
-
-                // The bigger the distance, i.e. the faster the mouse is moved,
-                // the bigger and more coarse the line width
-                processing.strokeWeight((radius * dist) / 50);
-
-                processing.line(x1, y1, x2, y2);
+                bristles[i].draw();
             }
-
-            bristles[i].endX = x1;
-            bristles[i].endY = y1;
+            
+            // Must be placed after draw
+            bristles[i].update();
         }
     }
 
